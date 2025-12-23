@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Reframe by Theta Labs",
+  "version": "0.1.0",
+  "identifier": "com.penlighty.reframe-app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "overlay",
+        "title": "Reframe by Theta Labs",
+        "fullscreen": false,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false
+      },
+      {
+        "label": "controls",
+        "title": "Reframe by Theta Labs",
+        "url": "/controls",
+        "width": 900,
+        "height": 600,
+        "decorations": true,
+        "transparent": true,
+        "alwaysOnTop": false,
+        "shadow": false,
+        "x": 660,
+        "y": 50
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "scope": [
+          "**",
+          "$VIDEO/**",
+          "$HOME/Videos/**",
+          "C:/**",
+          "c:/**",
+          "D:/**",
+          "d:/**",
+          "E:/**",
+          "e:/**",
+          "F:/**",
+          "f:/**"
+        ]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}
