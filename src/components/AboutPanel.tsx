@@ -1,8 +1,48 @@
-import React, { memo } from 'react';
-import { ShieldCheck, FileText, Heart, Video } from 'lucide-react';
+import { useState, memo } from 'react';
+import { ShieldCheck, FileText, Heart, Video, RefreshCw, CheckCircle2 } from 'lucide-react';
 import logo from '../assets/logo.png';
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 export const AboutPanel = memo(() => {
+    const [checking, setChecking] = useState(false);
+    const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'no-update' | 'error'>('idle');
+    const [updateInfo, setUpdateInfo] = useState<any>(null);
+
+    const checkForUpdates = async () => {
+        setChecking(true);
+        setUpdateStatus('checking');
+        try {
+            const update = await check();
+            if (update) {
+                setUpdateInfo(update);
+                setUpdateStatus('available');
+            } else {
+                setUpdateStatus('no-update');
+                setTimeout(() => setUpdateStatus('idle'), 3000);
+            }
+        } catch (e) {
+            console.error(e);
+            setUpdateStatus('error');
+            setTimeout(() => setUpdateStatus('idle'), 3000);
+        } finally {
+            setChecking(false);
+        }
+    };
+
+    const installUpdate = async () => {
+        if (!updateInfo) return;
+        try {
+            setChecking(true);
+            await updateInfo.downloadAndInstall();
+            await relaunch();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to install update: " + e);
+            setChecking(false);
+        }
+    };
+
     return (
         <div className="p-8 h-full overflow-y-auto custom-scrollbar animate-in slide-in-from-bottom-4 duration-500">
             <div className="max-w-3xl mx-auto space-y-12 pb-20">
@@ -13,6 +53,49 @@ export const AboutPanel = memo(() => {
                     </div>
                     <h2 className="text-4xl font-extrabold tracking-tight">About Reframe</h2>
                     <p className="text-indigo-400 font-medium tracking-wide uppercase text-xs">A Professional Tool for Educational Excellence</p>
+
+                    {/* Update Section */}
+                    <div className="pt-4 flex flex-col items-center gap-2">
+                        {updateStatus === 'available' ? (
+                            <div className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl w-full max-w-md animate-in zoom-in-95 duration-200">
+                                <p className="text-sm font-bold text-green-400 mb-1">New Update Available! (v{updateInfo.version})</p>
+                                <p className="text-[10px] text-zinc-500 mb-3 truncate px-2">{updateInfo.body}</p>
+                                <button
+                                    onClick={installUpdate}
+                                    disabled={checking}
+                                    className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-green-500/20 disabled:opacity-50"
+                                >
+                                    {checking ? "Downloading..." : "Download & Restart"}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={checkForUpdates}
+                                disabled={checking}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${updateStatus === 'no-update'
+                                        ? 'bg-zinc-800 border-green-500/50 text-green-400'
+                                        : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20'
+                                    } disabled:opacity-50`}
+                            >
+                                {updateStatus === 'checking' ? (
+                                    <>
+                                        <RefreshCw size={14} className="animate-spin" />
+                                        Checking...
+                                    </>
+                                ) : updateStatus === 'no-update' ? (
+                                    <>
+                                        <CheckCircle2 size={14} />
+                                        You are up to date
+                                    </>
+                                ) : (
+                                    <>
+                                        <RefreshCw size={14} />
+                                        Check for Updates
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
                 </header>
 
                 {/* Mission / Values */}

@@ -14,7 +14,6 @@ import {
   Keyboard,
   MoreHorizontal,
   Film,
-  AlertCircle,
   Info,
   ListFilter,
   Trash2,
@@ -59,7 +58,6 @@ export default function App({ mode = 'controls' }: AppProps) {
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
   const [pendingRecordingName, setPendingRecordingName] = useState('');
   const [diskInfo, setDiskInfo] = useState<{ free: number, total: number, label: string } | null>(null);
-  const [micMuteWarning, setMicMuteWarning] = useState(false);
   const [sortMode, setSortMode] = useState<'newest' | 'name' | 'size'>('newest');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [renamingFile, setRenamingFile] = useState<FileRecord | null>(null);
@@ -339,20 +337,6 @@ export default function App({ mode = 'controls' }: AppProps) {
             </div>
           )}
 
-          {/* Mic Mute Disclaimer */}
-          {micMuteWarning && (
-            <div className="absolute top-full mt-6 left-1/2 -translate-x-1/2 bg-zinc-900 border border-indigo-500/50 px-5 py-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-top-4 duration-500 z-[100] min-w-[280px]">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                  <AlertCircle size={18} />
-                </div>
-                <div>
-                  <div className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest">Recording Limitation</div>
-                  <div className="text-xs text-zinc-300 mt-0.5 leading-tight">Live audio toggling is not yet supported. This change will apply to your <span className="text-indigo-400 font-bold">next session</span>.</div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

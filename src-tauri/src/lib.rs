@@ -11,6 +11,9 @@ use tauri::{Emitter, State}; // Added Emitter
 use tauri_plugin_shell::process::CommandEvent;
 use tauri_plugin_shell::ShellExt;
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
 #[derive(Clone, Serialize)]
 struct ClickPayload {
     x: f64,
@@ -323,7 +326,12 @@ struct DiskInfo {
 async fn get_disk_info() -> Result<DiskInfo, String> {
     // On Windows, use wmic to get disk info for C:
     // wmic logicaldisk where "DeviceID='C:'" get size,freespace,volumename
-    let output = Command::new("wmic")
+    let mut cmd = Command::new("wmic");
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+    let output = cmd
         .args([
             "logicaldisk",
             "where",
@@ -418,6 +426,10 @@ fn start_recording(state: State<AppState>, options: String) -> Result<String, St
 
     // Build FFmpeg command using std::process::Command
     let mut cmd = Command::new(ffmpeg_path);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
 
     cmd.stdin(Stdio::piped())
         .stdout(Stdio::inherit())
@@ -676,6 +688,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             start_recording,
             stop_recording,
