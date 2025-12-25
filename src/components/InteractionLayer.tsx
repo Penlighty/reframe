@@ -24,8 +24,8 @@ const InteractionLayer = memo(({
   mouseEnabled,
   keysEnabled,
   keystrokePosition = 'bottom-left',
-  clickColorLeft = '#6366f1',
-  clickColorRight = '#ea580c'
+  clickColorLeft = '#a3d95d',
+  clickColorRight = '#f2a93b'
 }: InteractionLayerProps) => {
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const [keyHistory, setKeyHistory] = useState<KeyEntry[]>([]);

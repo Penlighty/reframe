@@ -36,8 +36,8 @@ const DEFAULT_SETTINGS: AppSettings = {
     showClicks: true,
     showKeystrokes: true,
     keystrokePosition: 'bottom-left',
-    clickColorLeft: '#6366f1',
-    clickColorRight: '#ea580c',
+    clickColorLeft: '#a3d95d',
+    clickColorRight: '#f2a93b',
     micVolume: 1.0,
     systemAudioVolume: 1.0,
     savePath: '',
@@ -76,6 +76,9 @@ export function useSettings() {
                 const store = await getStore();
                 const saved = await store.get<AppSettings>('settings');
                 if (saved) {
+                    // Force update theme colors
+                    saved.clickColorLeft = '#a3d95d';
+                    saved.clickColorRight = '#f97316';
                     setSettings(prev => ({ ...prev, ...saved }));
                 }
             } catch (e) {

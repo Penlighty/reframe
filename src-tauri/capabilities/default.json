@@ -20,6 +20,9 @@
     "core:window:allow-set-decorations",
     "core:window:allow-minimize",
     "core:window:allow-start-dragging",
+    "updater:default",
+    "process:allow-restart",
+    "store:default",
     {
       "identifier": "fs:allow-read",
       "allow": [

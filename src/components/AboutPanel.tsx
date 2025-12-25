@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { ShieldCheck, FileText, Heart, Video, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, FileText, Heart, Video, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import logo from '../assets/logo.png';
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
@@ -73,8 +73,8 @@ export const AboutPanel = memo(() => {
                                 onClick={checkForUpdates}
                                 disabled={checking}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${updateStatus === 'no-update'
-                                        ? 'bg-zinc-800 border-green-500/50 text-green-400'
-                                        : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20'
+                                    ? 'bg-zinc-800 border-green-500/50 text-green-400'
+                                    : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/20'
                                     } disabled:opacity-50`}
                             >
                                 {updateStatus === 'checking' ? (
@@ -86,6 +86,11 @@ export const AboutPanel = memo(() => {
                                     <>
                                         <CheckCircle2 size={14} />
                                         You are up to date
+                                    </>
+                                ) : updateStatus === 'error' ? (
+                                    <>
+                                        <XCircle size={14} className="text-red-400" />
+                                        Error Checking
                                     </>
                                 ) : (
                                     <>
@@ -148,7 +153,7 @@ export const AboutPanel = memo(() => {
                 </div>
 
                 <footer className="text-center pt-8 border-t border-white/5">
-                    <p className="text-[10px] text-zinc-600 uppercase tracking-[0.2em]">Build 0.1.0 • Made with Excellence • Reframe by Theta Labs</p>
+                    <p className="text-[10px] text-zinc-600 uppercase tracking-[0.2em]">Build 1.1.0 • Made with Excellence • Reframe by Theta Labs</p>
                 </footer>
             </div>
         </div>

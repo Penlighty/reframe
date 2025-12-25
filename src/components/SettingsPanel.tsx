@@ -6,6 +6,7 @@ import {
 import { AppSettings } from '../hooks/useSettings';
 import Toggle from './Toggle';
 import { invoke } from '@tauri-apps/api/core';
+import { CustomSelect } from './CustomSelect';
 
 interface SettingsPanelProps {
     settings: AppSettings;
@@ -45,26 +46,20 @@ export const SettingsPanel = memo(({ settings, updateSettings, availableDevices 
             <section>
                 <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">Hardware Settings</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         <Toggle
                             label="Microphone"
                             icon={Mic}
                             enabled={settings.micEnabled}
                             onChange={(enabled) => updateSettings({ micEnabled: enabled })}
                         />
-                        <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-3">
-                            <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Device Source</label>
-                            <select
-                                className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none disabled:opacity-50"
-                                value={settings.micDevice}
-                                disabled={!settings.micEnabled}
-                                onChange={(e) => updateSettings({ micDevice: e.target.value })}
-                            >
-                                {availableDevices.audio.map(dev => (
-                                    <option key={dev} value={dev}>{dev}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <CustomSelect
+                            label="Device Source"
+                            options={availableDevices.audio.map(dev => ({ value: dev, label: dev }))}
+                            value={settings.micDevice}
+                            disabled={!settings.micEnabled}
+                            onChange={(val) => updateSettings({ micDevice: val })}
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -130,20 +125,19 @@ export const SettingsPanel = memo(({ settings, updateSettings, availableDevices 
                             onChange={(enabled) => updateSettings({ showKeystrokes: enabled })}
                         />
                         {settings.showKeystrokes && (
-                            <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-2 animate-in slide-in-from-top-2 duration-300">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Position</label>
-                                <select
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none"
-                                    value={settings.keystrokePosition}
-                                    onChange={(e) => updateSettings({ keystrokePosition: e.target.value as any })}
-                                >
-                                    <option value="bottom-left">Bottom Left</option>
-                                    <option value="bottom-right">Bottom Right</option>
-                                    <option value="top-left">Top Left</option>
-                                    <option value="top-right">Top Right</option>
-                                    <option value="bottom-center">Bottom Center</option>
-                                </select>
-                            </div>
+                            <CustomSelect
+                                label="Position"
+                                options={[
+                                    { value: "bottom-left", label: "Bottom Left" },
+                                    { value: "bottom-right", label: "Bottom Right" },
+                                    { value: "top-left", label: "Top Left" },
+                                    { value: "top-right", label: "Top Right" },
+                                    { value: "bottom-center", label: "Bottom Center" }
+                                ]}
+                                value={settings.keystrokePosition}
+                                onChange={(val) => updateSettings({ keystrokePosition: val })}
+                                className="animate-in slide-in-from-top-2 duration-300"
+                            />
                         )}
                     </div>
                 </div>
@@ -183,11 +177,16 @@ export const SettingsPanel = memo(({ settings, updateSettings, availableDevices 
                                                 updateSettings(updates);
                                             }}
                                             className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all flex flex-col items-center gap-2 ${settings.webcamShape === shape.id
-                                                ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.1)]'
+                                                ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(163,217,93,0.3)]'
                                                 : 'bg-black/20 border-white/5 text-zinc-500 hover:border-white/10'
                                                 }`}
                                         >
-                                            <div className={`w-8 h-8 rounded border-2 ${settings.webcamShape === shape.id ? 'border-indigo-400' : 'border-zinc-700'} ${shape.icon}`} />
+                                            <div className="w-8 h-8 flex items-center justify-center">
+                                                <div className={`border-2 transition-all ${settings.webcamShape === shape.id ? 'border-indigo-400 bg-indigo-400/20' : 'border-zinc-600 bg-zinc-800/50'} ${shape.id === 'square' ? 'w-6 h-6 rounded-lg' :
+                                                    shape.id === 'portrait' ? 'w-4 h-7 rounded-md' :
+                                                        'w-7 h-4 rounded-md' // landscape
+                                                    }`} />
+                                            </div>
                                             {shape.label}
                                         </button>
                                     ))}
@@ -195,21 +194,12 @@ export const SettingsPanel = memo(({ settings, updateSettings, availableDevices 
                             </div>
 
                             {/* Source Selection */}
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-2 text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                                    <Video size={14} className="text-zinc-500" />
-                                    Video Source
-                                </div>
-                                <select
-                                    className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none"
-                                    value={settings.webcamDevice}
-                                    onChange={(e) => updateSettings({ webcamDevice: e.target.value })}
-                                >
-                                    {availableDevices.video.map(dev => (
-                                        <option key={dev} value={dev}>{dev}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <CustomSelect
+                                label="Video Source"
+                                options={availableDevices.video.map(dev => ({ value: dev, label: dev }))}
+                                value={settings.webcamDevice}
+                                onChange={(val) => updateSettings({ webcamDevice: val })}
+                            />
 
                             {/* Dimension Sliders */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -296,31 +286,27 @@ export const SettingsPanel = memo(({ settings, updateSettings, availableDevices 
             <section>
                 <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">Video Output</h3>
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                        <label className="text-sm text-zinc-400 mb-2 block">Resolution</label>
-                        <select
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none"
-                            value={settings.resolution}
-                            onChange={(e) => updateSettings({ resolution: e.target.value })}
-                        >
-                            <option value="Original (Lossless)">Original (Lossless)</option>
-                            <option value="4K UHD (3840x2160)">4K UHD (3840x2160)</option>
-                            <option value="1080p FHD (1920x1080)">1080p FHD (1920x1080)</option>
-                            <option value="720p HD (1280x720)">720p HD (1280x720)</option>
-                        </select>
-                    </div>
-                    <div className="bg-white/5 p-4 rounded-xl border border-white/5">
-                        <label className="text-sm text-zinc-400 mb-2 block">Frame Rate</label>
-                        <select
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-sm text-white focus:border-indigo-500 outline-none"
-                            value={settings.fps}
-                            onChange={(e) => updateSettings({ fps: parseInt(e.target.value) })}
-                        >
-                            <option value={120}>120 FPS</option>
-                            <option value={60}>60 FPS</option>
-                            <option value={30}>30 FPS</option>
-                        </select>
-                    </div>
+                    <CustomSelect
+                        label="Resolution"
+                        options={[
+                            { value: "Original (Lossless)", label: "Original (Lossless)" },
+                            { value: "4K UHD (3840x2160)", label: "4K UHD (3840x2160)" },
+                            { value: "1080p FHD (1920x1080)", label: "1080p FHD (1920x1080)" },
+                            { value: "720p HD (1280x720)", label: "720p HD (1280x720)" }
+                        ]}
+                        value={settings.resolution}
+                        onChange={(val) => updateSettings({ resolution: val })}
+                    />
+                    <CustomSelect
+                        label="Frame Rate"
+                        options={[
+                            { value: 120, label: "120 FPS" },
+                            { value: 60, label: "60 FPS" },
+                            { value: 30, label: "30 FPS" }
+                        ]}
+                        value={settings.fps}
+                        onChange={(val) => updateSettings({ fps: val })}
+                    />
                 </div>
             </section>
 
@@ -333,24 +319,25 @@ export const SettingsPanel = memo(({ settings, updateSettings, availableDevices 
                             <div className="text-sm font-medium">Hardware Acceleration</div>
                             <div className="text-xs text-zinc-500">NVIDIA NVENC H.264 (Detected)</div>
                         </div>
-                        <div className="flex items-center gap-2 text-green-400 text-xs bg-green-400/10 px-2 py-1 rounded border border-green-400/20">
+                        <div className="flex items-center gap-2 text-indigo-400 text-xs bg-indigo-400/10 px-2 py-1 rounded border border-indigo-400/20">
                             <Check size={12} /> Active
                         </div>
                     </div>
                     <div className="p-4 flex items-center justify-between">
                         <div>
-                            <div className="text-sm font-medium">Video Format</div>
+                            <div className="text-sm font-medium text-zinc-100">Video Format</div>
                             <div className="text-xs text-zinc-500">Container format for output files</div>
                         </div>
-                        <select
-                            className="bg-black/20 border border-white/10 rounded-lg p-2 text-sm text-white outline-none"
+                        <CustomSelect
+                            className="w-48"
+                            options={[
+                                { value: "MP4 (Recommended)", label: "MP4 (Recommended)" },
+                                { value: "MKV", label: "MKV" },
+                                { value: "MOV", label: "MOV" }
+                            ]}
                             value={settings.videoFormat}
-                            onChange={(e) => updateSettings({ videoFormat: e.target.value })}
-                        >
-                            <option value="MP4 (Recommended)">MP4 (Recommended)</option>
-                            <option value="MKV">MKV</option>
-                            <option value="MOV">MOV</option>
-                        </select>
+                            onChange={(val) => updateSettings({ videoFormat: val })}
+                        />
                     </div>
                 </div>
             </section>

@@ -23,9 +23,13 @@ body,
   margin: 0;
   width: 100%;
   height: 100%;
-  background: transparent;
   overflow: hidden;
-  /* App handles scrolling */
+}
+
+body.window-controls,
+body.window-overlay,
+body.window-webcam {
+  background: transparent;
 }
 
 @keyframes ripple {
@@ -74,12 +78,13 @@ body,
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(163, 217, 93, 0.2);
+  /* Lime Green Tint */
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(163, 217, 93, 0.4);
 }
 
 .drag-handle {

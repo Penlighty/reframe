@@ -104,11 +104,11 @@ const AudioMeter = memo(({ active, deviceId }: AudioMeterProps) => {
     return (
         <div className="w-1.5 h-8 bg-zinc-800 rounded-full overflow-hidden flex items-end">
             <div
-                className="w-full bg-gradient-to-t from-green-500 to-green-400 transition-all duration-75 ease-out"
+                className="w-full bg-gradient-to-t from-indigo-500 to-indigo-400 transition-all duration-75 ease-out"
                 style={{
                     height: `${displayLevel}%`,
                     opacity: active ? 1 : 0.3,
-                    boxShadow: displayLevel > 70 ? '0 0 8px rgba(34, 197, 94, 0.5)' : 'none'
+                    boxShadow: displayLevel > 70 ? '0 0 8px rgba(163, 217, 93, 0.5)' : 'none'
                 }}
             />
         </div>

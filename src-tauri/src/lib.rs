@@ -100,6 +100,9 @@ struct RecordingOptions {
     mic_volume: Option<f32>,
     #[serde(rename = "systemAudioVolume")]
     system_audio_volume: Option<f32>,
+    framerate: Option<u32>,
+    width: Option<u32>,
+    height: Option<u32>,
 }
 
 // Redundant command removed as convertFileSrc is used in frontend.
@@ -268,12 +271,26 @@ fn rename_recording(path: String, new_name: String) -> Result<(), String> {
 
 #[tauri::command]
 async fn get_input_devices(app: tauri::AppHandle) -> Result<DeviceList, String> {
-    let output = app
-        .shell()
-        .command("ffmpeg")
+    // Determine ffmpeg path. In production this should be bundled or located in a known path.
+    // For now we use the same path as start_recording or assume it is in PATH if not absolute.
+    // Since start_recording uses an absolute path, we should probably stick to that or "ffmpeg" if in PATH.
+    // Given the context of the user having a specific build path, we will try "ffmpeg" first assuming it is in path,
+    // or use the absolute path if known.
+    // However, to be consistent with start_recording which has the hardcoded path, let's try to use "ffmpeg" generally
+    // but APPLY the creation flags.
+
+    // Note: The user mentioned "built exe", so it likely uses the bundled ffmpeg or system ffmpeg.
+    // Using std::process::Command allows us to hide the window.
+
+    let mut cmd = Command::new("ffmpeg");
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+
+    let output = cmd
         .args(["-list_devices", "true", "-f", "dshow", "-i", "dummy"])
         .output()
-        .await
         .map_err(|e| format!("Failed to execute ffmpeg: {}", e))?;
 
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -421,8 +438,8 @@ fn start_recording(state: State<AppState>, options: String) -> Result<String, St
     let output_file = session_dir.join("screen.mp4");
     let output_path_str = output_file.to_string_lossy().to_string();
 
-    // Get FFmpeg path
-    let ffmpeg_path = "C:\\Users\\Owner\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.0.1-full_build\\bin\\ffmpeg.exe";
+    // Get FFmpeg path (assume in PATH for simplicity, or specific if needed)
+    let ffmpeg_path = "ffmpeg";
 
     // Build FFmpeg command using std::process::Command
     let mut cmd = Command::new(ffmpeg_path);
@@ -459,11 +476,12 @@ fn start_recording(state: State<AppState>, options: String) -> Result<String, St
     }
 
     // Add video input with optimization flags
+    let fps = opts.framerate.unwrap_or(30).to_string();
     cmd.args([
         "-f",
         "gdigrab",
         "-framerate",
-        "30",
+        &fps,
         "-offset_x",
         "0",
         "-offset_y",
@@ -474,6 +492,14 @@ fn start_recording(state: State<AppState>, options: String) -> Result<String, St
         "desktop",
     ]);
 
+    // Apply scaling if requested
+    if let (Some(w), Some(h)) = (opts.width, opts.height) {
+        println!("Applying video scaling: {}x{}", w, h);
+        cmd.args(["-vf", &format!("scale={}:{}:flags=lanczos", w, h)]);
+    } else {
+        println!("No resolution scaling applied (Original/Native).");
+    }
+
     // Encoding settings for video
     cmd.args([
         "-c:v",
@@ -482,12 +508,8 @@ fn start_recording(state: State<AppState>, options: String) -> Result<String, St
         "yuv420p",
         "-preset",
         "superfast",
-        "-profile:v",
-        "main",
-        "-level",
-        "3.0",
         "-g",
-        "30", // Keyframe every second for 30fps
+        &fps, // Keyframe interval matches fps (1 sec)
         "-crf",
         "23",
     ]);
@@ -689,6 +711,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             start_recording,
             stop_recording,

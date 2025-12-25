@@ -13,6 +13,7 @@ import RecordingTimer from './RecordingTimer';
 // We'll accept a subset of AppSettings or just the values needed
 interface FloatingBarProps {
     isPaused: boolean;
+    isStopping?: boolean;
     setIsPaused: (val: boolean) => void;
     onStop: () => void;
     showClicks: boolean;
@@ -25,6 +26,7 @@ interface FloatingBarProps {
 
 const FloatingBar = ({
     isPaused,
+    isStopping = false,
     setIsPaused,
     onStop,
     showClicks,
@@ -50,6 +52,7 @@ const FloatingBar = ({
 
             <RecordingTimer
                 isPaused={isPaused}
+                isStopping={isStopping}
                 onTimeUpdate={onTimeUpdate}
                 initialSeconds={initialSeconds}
             />

@@ -35,6 +35,7 @@ import { useSettings } from './hooks/useSettings';
 import FloatingBar from './components/FloatingBar';
 import { SettingsPanel } from './components/SettingsPanel';
 import { AboutPanel } from './components/AboutPanel';
+import { CustomSelect } from './components/CustomSelect';
 
 export interface FileRecord {
   id: number;
@@ -54,6 +55,7 @@ export default function App({ mode = 'controls' }: AppProps) {
   const [activeTab, setActiveTab] = useState('record');
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
   const [pendingRecordingName, setPendingRecordingName] = useState('');
@@ -222,8 +224,20 @@ export default function App({ mode = 'controls' }: AppProps) {
         windowTitle: '',
         region: '',
         micVolume: settings.micVolume,
-        systemAudioVolume: settings.systemAudioVolume
+        systemAudioVolume: settings.systemAudioVolume,
+        framerate: settings.fps,
+        width: null as number | null,
+        height: null as number | null
       };
+
+      // Parse resolution
+      const resMatch = settings.resolution.match(/(\d+)x(\d+)/);
+      if (resMatch) {
+        // @ts-ignore
+        rustOptions.width = parseInt(resMatch[1]);
+        // @ts-ignore
+        rustOptions.height = parseInt(resMatch[2]);
+      }
 
       const res = await invoke<string>('start_recording', { options: JSON.stringify(rustOptions) });
       sessionPathRef.current = res;
@@ -242,12 +256,14 @@ export default function App({ mode = 'controls' }: AppProps) {
 
   const confirmStopRecording = async () => {
     setShowStopConfirmation(false);
+    setIsStopping(true); // Stop timer updates immediately
     try {
       const result = await invoke<{ path: string, size: string }>('stop_recording');
       const outputPath = result.path;
 
       setIsRecording(false);
       setIsPaused(false);
+      setIsStopping(false); // Reset stopping state
       await getCurrentWindow().setDecorations(true);
       await getCurrentWindow().setSize(new LogicalSize(900, 600));
 
@@ -275,6 +291,7 @@ export default function App({ mode = 'controls' }: AppProps) {
       setPendingRecordingName('');
     } catch (e) {
       console.error("Failed to stop recording:", e);
+      setIsStopping(false); // Reset on error
     }
   };
 
@@ -282,12 +299,22 @@ export default function App({ mode = 'controls' }: AppProps) {
     setShowStopConfirmation(false);
   };
 
+  /* --- WRAP APP CONTENT WITH ERROR BOUNDARY TO DEBUG CRASHES --- */
+  if (!loaded) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-full bg-black text-white p-4">
+        <h2 className="text-xl font-bold animate-pulse">Loading Application...</h2>
+        <div className="text-xs text-zinc-500 mt-2 font-mono">Loading settings and dependencies</div>
+      </div>
+    );
+  }
+
   const toggleWebcam = async () => {
     updateSettings({ webcamEnabled: !settings.webcamEnabled }, true);
   };
 
   return (
-    <div className="w-full h-full bg-transparent font-sans text-zinc-100 relative overflow-hidden select-none">
+    <div className="w-full h-full bg-inherit font-sans text-zinc-100 relative overflow-hidden select-none">
 
       {/* Countdown Overlay */}
       {countdown !== null && (
@@ -304,6 +331,7 @@ export default function App({ mode = 'controls' }: AppProps) {
           {!showStopConfirmation ? (
             <FloatingBar
               isPaused={isPaused}
+              isStopping={isStopping}
               setIsPaused={setIsPaused}
               onStop={handleStopRecording}
               showClicks={settings.showClicks}
@@ -347,7 +375,7 @@ export default function App({ mode = 'controls' }: AppProps) {
       {/* MAIN WINDOW (Dashboard) */}
       {!isRecording && countdown === null && (
 
-        <div className="bg-zinc-900/95 w-full h-full flex flex-col overflow-hidden text-zinc-100">
+        <div className="bg-[#050505] w-full h-full flex flex-col overflow-hidden text-zinc-100">
           <div className="flex flex-1 overflow-hidden">
             {/* Sidebar */}
             <div className="w-60 bg-black/20 border-r border-white/5 flex flex-col p-4 gap-2">
@@ -457,15 +485,12 @@ export default function App({ mode = 'controls' }: AppProps) {
                                     <span>Mic</span>
                                     <span className="text-[10px] text-zinc-500">{settings.micVolume.toFixed(1)}x</span>
                                   </div>
-                                  <select
-                                    className="bg-transparent text-[10px] text-zinc-500 outline-none w-full truncate mb-1"
-                                    onChange={(e) => updateSettings({ micDevice: e.target.value })}
+                                  <CustomSelect
+                                    className="mt-1"
+                                    options={availableDevices.audio.map(dev => ({ value: dev, label: dev }))}
                                     value={settings.micDevice}
-                                  >
-                                    {availableDevices.audio.map((dev, i) => (
-                                      <option key={i} value={dev}>{dev}</option>
-                                    ))}
-                                  </select>
+                                    onChange={(val) => updateSettings({ micDevice: val })}
+                                  />
                                 </div>
                               </div>
                               {/* Mic Volume Slider */}
@@ -697,7 +722,7 @@ export default function App({ mode = 'controls' }: AppProps) {
                           return (
                             <div
                               key={rec.id}
-                              className={`group relative flex ${viewMode === 'list' ? 'items-center gap-3 p-1.5' : 'flex-col gap-2 p-3'} bg-zinc-900/40 hover:bg-zinc-800/60 border ${isSelected ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.1)]' : 'border-white/5 hover:border-white/10'} rounded-xl transition-all duration-200`}
+                              className={`group relative flex ${viewMode === 'list' ? 'items-center gap-3 p-1.5' : 'flex-col gap-2 p-3'} bg-zinc-900/40 hover:bg-zinc-800/60 border ${isSelected ? 'border-indigo-500 shadow-[0_0_15px_rgba(163,217,93,0.3)]' : 'border-white/5 hover:border-white/10'} rounded-xl transition-all duration-200`}
                             >
                               {/* Selection Overlay for both views */}
                               <div

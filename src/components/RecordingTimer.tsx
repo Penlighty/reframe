@@ -2,16 +2,17 @@ import { memo, useEffect, useState } from 'react';
 
 interface RecordingTimerProps {
     isPaused: boolean;
+    isStopping?: boolean;
     onTimeUpdate?: (seconds: number) => void;
     initialSeconds?: number;
 }
 
-const RecordingTimer = memo(({ isPaused, onTimeUpdate, initialSeconds = 0 }: RecordingTimerProps) => {
+const RecordingTimer = memo(({ isPaused, isStopping = false, onTimeUpdate, initialSeconds = 0 }: RecordingTimerProps) => {
     const [seconds, setSeconds] = useState(initialSeconds);
 
     useEffect(() => {
         let interval: ReturnType<typeof setInterval>;
-        if (!isPaused) {
+        if (!isPaused && !isStopping) {
             interval = setInterval(() => {
                 setSeconds(s => {
                     const next = s + 1;
@@ -21,7 +22,7 @@ const RecordingTimer = memo(({ isPaused, onTimeUpdate, initialSeconds = 0 }: Rec
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [isPaused, onTimeUpdate]);
+    }, [isPaused, isStopping, onTimeUpdate]);
 
     const formatTime = (secs: number) => {
         const hrs = Math.floor(secs / 3600);

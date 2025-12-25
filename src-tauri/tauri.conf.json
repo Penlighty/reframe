@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Reframe by Theta Labs",
-  "version": "0.1.0",
+  "productName": "Reframe",
+  "version": "1.1.0",
   "identifier": "com.penlighty.reframe-app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -13,7 +13,8 @@
     "windows": [
       {
         "label": "overlay",
-        "title": "Reframe by Theta Labs",
+        "title": "Reframe Overlay",
+        "url": "/index.html?mode=overlay",
         "fullscreen": false,
         "transparent": true,
         "decorations": false,
@@ -23,8 +24,8 @@
       },
       {
         "label": "controls",
-        "title": "Reframe by Theta Labs",
-        "url": "/controls",
+        "title": "Reframe Dashboard",
+        "url": "/index.html?mode=controls",
         "width": 900,
         "height": 600,
         "decorations": true,
